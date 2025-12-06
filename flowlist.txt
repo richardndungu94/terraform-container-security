@@ -1,0 +1,374 @@
+# 📋 Container Security Project - File Checklist
+
+Use this checklist to ensure you have all required files.
+
+---
+
+## ✅ Root Directory Files
+
+```
+terraform-container-security/
+├── [ ] main.tf                    # Provider configuration
+├── [ ] variables.tf               # Input variables
+├── [ ] outputs.tf                 # Output values
+├── [ ] ecr.tf                     # ECR repository + scanning
+├── [ ] codebuild.tf               # Build pipeline
+├── [ ] ecs.tf                     # ECS cluster + service
+├── [ ] iam.tf                     # IAM roles and policies
+├── [ ] monitoring.tf              # CloudWatch + alarms
+├── [ ] security.tf                # Additional security controls
+├── [ ] .gitignore                 # Git ignore rules
+├── [ ] terraform.tfvars.example   # Example configuration
+├── [ ] README.md                  # Documentation
+└── [ ] FILE-CHECKLIST.md          # This file
+```
+
+**Total:** 13 files in root
+
+---
+
+## ✅ sample-app/ Directory
+
+```
+sample-app/
+├── [ ] app.py                     # Python Flask application
+├── [ ] requirements.txt           # Python dependencies
+├── [ ] Dockerfile                 # Insecure Dockerfile (demo)
+├── [ ] Dockerfile.secure          # Secure Dockerfile (use this)
+└── [ ] buildspec.yml              # CodeBuild build specification
+```
+
+**Total:** 5 files in sample-app/
+
+---
+
+## ✅ scripts/ Directory
+
+```
+scripts/
+├── [ ] scan-image.sh              # Local image scanning script
+└── [ ] test-deployment.sh         # Test deployed application
+```
+
+**Total:** 2 files in scripts/
+
+---
+
+## 📝 File Contents Quick Reference
+
+### Terraform Files (Root)
+
+**main.tf** - 30 lines
+- Provider configuration
+- AWS region setup
+- Default tags
+- Random suffix generation
+
+**variables.tf** - 120 lines
+- All input variables
+- Validation rules
+- Default values
+
+**outputs.tf** - 80 lines
+- ECR repository URL
+- Application URL
+- Next steps guide
+
+**ecr.tf** - 180 lines
+- ECR repository
+- Lifecycle policies
+- Scan findings Lambda
+- EventBridge rules
+
+**codebuild.tf** - 90 lines
+- S3 bucket for artifacts
+- CodeBuild project
+- Build environment
+- Inline buildspec (backup)
+
+**ecs.tf** - 200 lines
+- VPC/subnets
+- Security groups
+- ALB + target group
+- ECS cluster
+- Task definition (secure)
+- ECS service
+
+**iam.tf** - 150 lines
+- CodeBuild role
+- ECS execution role
+- ECS task role
+- Lambda role
+- All policies
+
+**monitoring.tf** - 120 lines
+- SNS topic
+- CloudWatch alarms
+- Dashboard
+
+**security.tf** - 90 lines
+- KMS key (optional)
+- Security metrics
+- Additional controls
+- Documentation
+
+**.gitignore** - 30 lines
+- Terraform files
+- Python files
+- Docker files
+- IDE files
+
+**terraform.tfvars.example** - 25 lines
+- All configurable values
+- Comments explaining each
+
+---
+
+### Application Files (sample-app/)
+
+**app.py** - 30 lines
+```python
+# Flask application with:
+- Health check endpoint (/health)
+- Main endpoint (/)
+- JSON responses
+```
+
+**requirements.txt** - 3 lines
+```
+Flask==3.0.0
+Werkzeug==3.0.1
+requests==2.31.0
+```
+
+**Dockerfile** - 8 lines
+```dockerfile
+# INSECURE version for demo
+# Shows what NOT to do:
+- Uses :latest tag
+- Runs as root
+- No security hardening
+```
+
+**Dockerfile.secure** - 30 lines
+```dockerfile
+# SECURE version to actually use
+# Security features:
+- Specific base image version
+- Non-root user (UID 1000)
+- Health check
+- Minimal image (slim)
+```
+
+**buildspec.yml** - 60 lines
+```yaml
+# CodeBuild specification
+# Phases:
+- pre_build: Install Trivy, login ECR
+- build: Build + scan image
+- post_build: Push if scan passes
+```
+
+---
+
+### Scripts (scripts/)
+
+**scan-image.sh** - 40 lines
+```bash
+# Local scanning script
+- Installs Trivy if needed
+- Scans for vulnerabilities
+- Scans for secrets
+- Scans for misconfigurations
+```
+
+**test-deployment.sh** - 50 lines
+```bash
+# Test deployed application
+- Gets ALB URL from Terraform
+- Waits for app to be ready
+- Tests health endpoint
+- Tests main endpoint
+- Shows logs and metrics
+```
+
+---
+
+## 🔍 How to Verify Files
+
+### Quick Check
+
+```bash
+# Count files in each directory
+ls -1 *.tf *.md .gitignore terraform.tfvars.example 2>/dev/null | wc -l
+# Should show: 13
+
+ls -1 sample-app/* 2>/dev/null | wc -l
+# Should show: 5
+
+ls -1 scripts/* 2>/dev/null | wc -l
+# Should show: 2
+
+# Total: 20 files
+```
+
+### Detailed Verification
+
+```bash
+# Check if all Terraform files exist
+for file in main.tf variables.tf outputs.tf ecr.tf codebuild.tf ecs.tf iam.tf monitoring.tf security.tf; do
+  if [ -f "$file" ]; then
+    echo "✅ $file"
+  else
+    echo "❌ $file MISSING"
+  fi
+done
+
+# Check sample-app files
+for file in sample-app/app.py sample-app/requirements.txt sample-app/Dockerfile sample-app/Dockerfile.secure sample-app/buildspec.yml; do
+  if [ -f "$file" ]; then
+    echo "✅ $file"
+  else
+    echo "❌ $file MISSING"
+  fi
+done
+
+# Check scripts
+for file in scripts/scan-image.sh scripts/test-deployment.sh; do
+  if [ -f "$file" ]; then
+    echo "✅ $file"
+  else
+    echo "❌ $file MISSING"
+  fi
+done
+```
+
+### Verify File Sizes
+
+```bash
+# None of these should be 0 bytes
+find . -type f -size 0
+
+# Should return nothing (no empty files)
+```
+
+---
+
+## 🚨 Common Issues
+
+### Issue 1: Empty Files
+
+**Symptom:** File exists but has 0 bytes
+
+**Fix:**
+```bash
+# Check file size
+ls -lh filename
+
+# If 0 bytes, recreate from artifact
+# Copy content from the artifact above
+```
+
+### Issue 2: Missing Files
+
+**Symptom:** File doesn't exist
+
+**Fix:**
+```bash
+# Create the file
+touch filename
+
+# Copy content from artifacts
+nano filename
+# Paste content, save
+```
+
+### Issue 3: Wrong File Content
+
+**Symptom:** File has different content than expected
+
+**Fix:**
+```bash
+# Compare with artifact
+# Replace with correct content from artifacts above
+```
+
+---
+
+## ✅ Final Verification
+
+Before running `terraform init`, verify:
+
+1. **All 13 root files exist** ✓
+2. **All 5 sample-app files exist** ✓
+3. **All 2 scripts exist** ✓
+4. **No files are 0 bytes** ✓
+5. **Scripts are executable** ✓
+
+```bash
+# Make scripts executable
+chmod +x scripts/*.sh
+
+# Verify
+ls -l scripts/
+# Should show: -rwxr-xr-x (executable)
+```
+
+---
+
+## 📊 Expected Directory Structure
+
+```
+terraform-container-security/
+├── README.md                      [📄 Documentation]
+├── FILE-CHECKLIST.md             [📄 This file]
+├── .gitignore                    [📄 Git config]
+├── terraform.tfvars.example      [📄 Config template]
+├── main.tf                       [🔧 Terraform]
+├── variables.tf                  [🔧 Terraform]
+├── outputs.tf                    [🔧 Terraform]
+├── ecr.tf                        [🔧 Terraform]
+├── codebuild.tf                  [🔧 Terraform]
+├── ecs.tf                        [🔧 Terraform]
+├── iam.tf                        [🔧 Terraform]
+├── monitoring.tf                 [🔧 Terraform]
+├── security.tf                   [🔧 Terraform]
+├── sample-app/
+│   ├── app.py                    [🐍 Python]
+│   ├── requirements.txt          [📦 Dependencies]
+│   ├── Dockerfile                [🐳 Insecure demo]
+│   ├── Dockerfile.secure         [🐳 Secure version]
+│   └── buildspec.yml            [⚙️  CodeBuild]
+└── scripts/
+    ├── scan-image.sh            [🔍 Scanner]
+    └── test-deployment.sh       [🧪 Tester]
+```
+
+---
+
+## 🎯 Ready to Deploy?
+
+Once all files are verified:
+
+```bash
+# 1. Configure
+cp terraform.tfvars.example terraform.tfvars
+nano terraform.tfvars
+
+# 2. Initialize
+terraform init
+
+# 3. Validate
+terraform validate
+
+# 4. Plan
+terraform plan
+
+# 5. Deploy
+terraform apply
+```
+
+---
+
+**All files verified?** ✅  
+**Ready to deploy!** 🚀

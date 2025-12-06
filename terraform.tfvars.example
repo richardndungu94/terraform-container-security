@@ -1,0 +1,26 @@
+# terraform.tfvars.example
+
+aws_region    = "eu-north-1"
+project_name  = "container-security"
+environment   = "dev"
+
+# Container configuration
+container_image_tag = "latest"
+container_cpu       = 256   # 0.25 vCPU
+container_memory    = 512   # 512 MB
+desired_count       = 1
+container_port      = 8080
+
+# Security scanning
+enable_image_scanning            = true
+scan_on_push                     = true
+vulnerability_severity_threshold = "HIGH"  # CRITICAL, HIGH, MEDIUM, LOW
+
+# Monitoring
+enable_container_insights = true
+
+# Alerts (set your email to receive notifications)
+alert_email = "your-email@example.com"
+
+# Health check
+health_check_path = "/health"

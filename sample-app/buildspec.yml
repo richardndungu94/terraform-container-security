@@ -1,0 +1,57 @@
+# ========================================
+# sample-app/buildspec.yml (CodeBuild spec)
+# ========================================
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Installing security scanning tools..."
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - echo "Logging into Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      
+  build:
+    commands:
+      - echo "Building Docker image..."
+      - docker build -t $ECR_REPOSITORY_URI:$IMAGE_TAG -f Dockerfile.secure .
+      
+      - echo "Scanning image with Trivy..."
+      - echo "Threshold: $VULNERABILITY_THRESHOLD"
+      - trivy image --severity $VULNERABILITY_THRESHOLD --exit-code 1 --no-progress $ECR_REPOSITORY_URI:$IMAGE_TAG || SCAN_FAILED=true
+      
+      - |
+        if [ "$SCAN_FAILED" = "true" ]; then
+          echo "❌ Security scan FAILED! Vulnerabilities found at or above $VULNERABILITY_THRESHOLD severity."
+          echo ""
+          echo "To view details, run locally:"
+          echo "  trivy image --severity $VULNERABILITY_THRESHOLD $ECR_REPOSITORY_URI:$IMAGE_TAG"
+          echo ""
+          echo "Common fixes:"
+          echo "  - Update base image version"
+          echo "  - Update dependencies in requirements.txt"
+          echo "  - Remove unused packages"
+          exit 1
+        fi
+      
+      - echo "✅ Security scan PASSED! No critical vulnerabilities found."
+      
+  post_build:
+    commands:
+      - echo "Pushing Docker image to ECR..."
+      - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
+      - docker tag $ECR_REPOSITORY_URI:$IMAGE_TAG $ECR_REPOSITORY_URI:latest
+      - docker push $ECR_REPOSITORY_URI:latest
+      - echo "Build completed successfully"
+      - printf '[{"name":"app","imageUri":"%s"}]' $ECR_REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - '**/*'
+
+cache:
+  paths:
+    - '/root/.cache/pip/**/*'
